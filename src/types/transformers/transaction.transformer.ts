@@ -13,3 +13,14 @@ export const TransferCryptoCurrencyReqTransformer = z.object({
 export const TransferCryptoCurrencyResTransformer = z.object({
   hash: z.string(),
 });
+export const TransferCryptoCurrencyByAddressReqTransformer = z.object({
+  from: z.string(),
+  toAddress: z.string(),
+  amount: z.number(),
+  asset: z.string(),
+  network: z.nativeEnum(NetworkEnum),
+});
+
+export const TransferCryptoCurrencyByAddressResTransformer = z.object({
+  hash: z.string(),
+});

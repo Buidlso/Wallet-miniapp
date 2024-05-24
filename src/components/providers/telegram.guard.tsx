@@ -1,14 +1,26 @@
-"use client";
+"user client";
 
-import { PropsWithChildren } from "react";
-import { useTelegram } from "./telegram.provider";
+import React, { PropsWithChildren } from "react";
+import { useAppDispatch, useTelegramStore } from "@/redux/hooks";
 
-export function TelegramGuard({ children }: PropsWithChildren) {
-  const { user } = useTelegram();
+import { Loading } from "../Loading";
+import { retrieveLaunchParams } from "@tma.js/sdk";
+import { telegramActions } from "@/redux/actions";
 
-  if (!user) {
-    return <div>Not authorized</div>;
+export function TelegramGuard(props: PropsWithChildren) {
+  const { telegramUserId } = useTelegramStore();
+  const { initData } = retrieveLaunchParams();
+  const dispath = useAppDispatch();
+
+  React.useEffect(() => {
+    if (!telegramUserId && !!initData?.user?.id) {
+      dispath(telegramActions.setTelegramUserId(initData.user.id.toString()));
+    }
+  }, [telegramUserId, initData?.user?.id]);
+
+  if (!telegramUserId) {
+    return <Loading />;
   }
 
-  return <div>{children}</div>;
+  return <>{props.children}</>;
 }
