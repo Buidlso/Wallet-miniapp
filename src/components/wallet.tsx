@@ -11,19 +11,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetBalanceQuery, useGetWalletQuery } from "@/server/api/wallet";
+import { useAppDispatch, useTelegramStore } from "@/redux/hooks";
+import {
+  useGetBalanceQuery,
+  useGetWalletQuery,
+  useSendTransactionByAddressMutation,
+} from "@/server/api/wallet";
 
 import { Button } from "@/components/ui/button";
+import { ButtonIcon } from "./button/ButtonIcon";
+import { DollarSign } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { Loader } from "./loader";
+import { Loading } from "./Loading";
 import { NetworkEnum } from "@/types/enums";
-import SelectUser from "./SelectUser";
 import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/Typography";
 import WalletBalanceCard from "@/components/WalletBalanceCard";
-import { useAppDispatch } from "@/redux/hooks";
 import { useSendTransactionMutation } from "@/server/api/wallet";
 import { useTelegram } from "@/components/providers";
 import { useWalletStore } from "@/redux/hooks";
+import { walletActions } from "@/redux/actions";
 
 type WalletBalance = {
   ETH_MAINNET: number;
@@ -36,23 +45,39 @@ type WalletBalance = {
 const Wallet = ({ sendTransaction }: { sendTransaction: boolean }) => {
   const { user } = useTelegram();
   const { wallet, sendTransactionToUser, walletBalance } = useWalletStore();
+  const { telegramUserId } = useTelegramStore();
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkEnum>(
     NetworkEnum.ETH_MAINNET
   );
+  const dispatch = useAppDispatch();
+
   const [selectedToken, setSelectedToken] = useState<string>();
   const [errorTransaction, setErrorTransaction] = useState<string>();
+  const { data } = useSendTransactionMutation();
+  const [showTransaction, setShowTransaction] = useState<boolean>(false);
 
   const { isLoading: isGetWalletLoading } = useGetWalletQuery(
-    user?.id?.toString()!,
+    telegramUserId!,
     !wallet?.walletAddress
   );
 
   const { isLoading: isGetWalletBalanceLoading } = useGetBalanceQuery(
-    wallet?.telegramId!,
+    telegramUserId,
     selectedNetwork,
     !isGetWalletLoading && !!wallet?.walletAddress
   );
-  const { data } = useSendTransactionMutation();
+
+  function handleSendTransaction() {
+    dispatch(
+      walletActions.setSendTransactionTo({
+        telegramId: telegramUserId,
+      })
+    );
+    setShowTransaction(true);
+  }
+
+  console.log({ wallet });
+  if (!telegramUserId) return <Loading />;
 
   return (
     <div className="bg-muted h-wull min-w-96 py-4 px-5 space-y-6 flex flex-col items-center overflow-x-auto border border-border rounded-tr-[12px] rounded-br-[12px] border-l-0">
@@ -60,9 +85,8 @@ const Wallet = ({ sendTransaction }: { sendTransaction: boolean }) => {
         selectedNetwork={selectedNetwork}
         setSelectNetwork={setSelectedNetwork}
       />
-
       {/* {!!sendTransactionToUser?.telegramId ? ( */}
-      {sendTransaction ? (
+      {showTransaction ? (
         <SendTransaction
           selectedToken={selectedToken!}
           selectedNetwork={selectedNetwork!}
@@ -106,6 +130,17 @@ const Wallet = ({ sendTransaction }: { sendTransaction: boolean }) => {
               />
             ))}
       </div>
+      {!showTransaction && (
+        <ButtonIcon
+          data-testid="sendCryptoButton"
+          className="py-5 w-full"
+          variant={"destructive"}
+          onClick={handleSendTransaction}
+          icon={DollarSign}
+        >
+          {false ? <Loader className="size-4 animate-spin" /> : "Send"}
+        </ButtonIcon>
+      )}
     </div>
   );
 };
@@ -157,6 +192,8 @@ const SendTransaction = ({
   const dispatch = useAppDispatch();
   const { wallet, sendTransactionToUser, walletBalance } = useWalletStore();
   const [hash, setHash] = useState<string>();
+  const { telegramUserId } = useTelegramStore();
+  const [walletAddress, setWalletAddress] = useState<string>();
 
   const {
     data,
@@ -164,24 +201,31 @@ const SendTransaction = ({
     mutateAsync: sendTransaction,
     isError,
     error,
-  } = useSendTransactionMutation();
+  } = useSendTransactionByAddressMutation();
 
   const handleSendCrypto = async () => {
-    if (!selectedToken) {
+    if (!selectedToken || !ethAmount) {
       setErrorTransaction("Please select a token");
       return;
     }
 
+    console.log({ sendTransactionToUser });
+
     const { hash } = await sendTransaction({
       amount: ethAmount!,
-      from: user?.id.toString()!,
+      from: telegramUserId!,
       network: selectedNetwork,
-      to: sendTransactionToUser?.telegramId!,
+      // toAddress: sendTransactionToUser?.telegramId!,
+      toAddress: walletAddress!,
       asset: selectedToken!,
     });
     setHash(hash);
     setErrorTransaction("");
   };
+
+  const SEPOLIA_LINK = "/sepolia.etherscan.io/tx/";
+
+  function handleOnChange() {}
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -201,7 +245,11 @@ const SendTransaction = ({
       <div className="text-center space-y-3">
         <div>
           <p className="text-muted-foreground">Sending to:</p>
-          <SelectUser />
+          <Input
+            type="text"
+            placeholder="Wallet Address"
+            onChange={(e) => setWalletAddress(e.target.value)}
+          />
         </div>
         <div className="flex items-center justify-center gap-3">
           <Avatar>
@@ -210,9 +258,13 @@ const SendTransaction = ({
           </Avatar>
           <p>{sendTransactionToUser?.firstName}</p>
         </div>
-        <Typography className="break-all text-muted-foreground">
+        <Link
+          href={`https://sepolia.etherscan.io/tx/${hash}`}
+          className="break-all text-muted-foreground hover:underline"
+          target="_blank"
+        >
           {hash}
-        </Typography>
+        </Link>
       </div>
     </div>
   );

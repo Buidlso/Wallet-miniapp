@@ -20,11 +20,12 @@ import { Loader } from "lucide-react";
 import { StringSession } from "telegram/sessions";
 import { TelegramClient } from "telegram";
 import { Typography } from "../Typography";
-import { sendLoginCode } from "@/lib/telegram/auth";
 import { set } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useWalletStore } from "@/redux/hooks";
+
+// import { sendLoginCode } from "@/lib/telegram/auth";
 
 // types //
 type TUser = {
@@ -134,15 +135,15 @@ export function TelegramProvider({ children }: PropsWithChildren) {
   useEffect(redirectToDashboard, [session]);
   useEffect(loadUser, [isClientConnected]);
 
-  async function sendCodeHandler() {
-    if (!client) return;
-    setShowOtpForm(true);
-    try {
-      await sendLoginCode(client, phoneNumber);
-    } catch (error) {
-      setShowOtpForm(false);
-    }
-  }
+  // async function sendCodeHandler() {
+  //   if (!client) return;
+  //   setShowOtpForm(true);
+  //   try {
+  //     await sendLoginCode(client, phoneNumber);
+  //   } catch (error) {
+  //     setShowOtpForm(false);
+  //   }
+  // }
 
   async function clientStartHandler(): Promise<void> {
     if (!client) return;
@@ -236,14 +237,14 @@ export function TelegramProvider({ children }: PropsWithChildren) {
               </Typography>
             </div>
 
-            <Button
+            {/* <Button
               type="button"
               value="start client"
               onClick={sendCodeHandler}
               className="w-full"
             >
               Continue
-            </Button>
+            </Button> */}
           </div>
         ) : (
           <>

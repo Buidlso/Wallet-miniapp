@@ -2,6 +2,7 @@ import {
   TCreateUserWalletReqDto,
   TGetBalanceResDto,
   TGetUserWalletResDto,
+  TTransferCryptoCurrencyByAddressReqDto,
   TTransferCryptoCurrencyReqDto,
   TTransferCryptoCurrencyResDto,
 } from "@/types/dtos";
@@ -9,12 +10,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { AxiosError } from "axios";
 import { NetworkEnum } from "@/types/enums";
-import { _1Min } from "@/types/time";
 import axios from "@/lib/axios";
 import { toast } from "@/components/ui/use-toast";
 import { useAppDispatch } from "@/redux/hooks";
 import { useRouter } from "next/navigation";
 import { walletActions } from "@/redux/features/wallet-slice";
+
+// import { _1Min } from "@/types/time";
 
 export const useSendTransactionMutation = () => {
   const queryClient = useQueryClient();
@@ -46,6 +48,42 @@ export const useSendTransactionMutation = () => {
   return useMutation({
     mutationKey: ["SEND_TRANSACTION"],
     mutationFn: sendTransaction,
+    onSuccess,
+    onError,
+  });
+};
+export const useSendTransactionByAddressMutation = () => {
+  const queryClient = useQueryClient();
+
+  async function sendTransactionByAddress(
+    payload: TTransferCryptoCurrencyByAddressReqDto
+  ) {
+    const { data } = await axios.post<TTransferCryptoCurrencyResDto>(
+      "/transactions/send-by-address",
+      payload
+    );
+    return data;
+  }
+
+  // on success
+  function onSuccess(resp?: TTransferCryptoCurrencyResDto) {
+    // queryClient.invalidateQueries(["SEND_TRANSACTION"]);
+    toast({
+      title: "Transaction Successfull",
+      variant: "default",
+    });
+  }
+
+  function onError(err?: AxiosError) {
+    toast({
+      title: "Transaction failed",
+      variant: "destructive",
+    });
+  }
+
+  return useMutation({
+    mutationKey: ["SEND_TRANSACTION_BY_ADDRESS"],
+    mutationFn: sendTransactionByAddress,
     onSuccess,
     onError,
   });
@@ -131,7 +169,6 @@ export const useGetWalletQuery = (
     const { data } = await axios.get<TGetUserWalletResDto>(
       `/wallets/${telegramUserId}`
     );
-
     return data;
   }
 

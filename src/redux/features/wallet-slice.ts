@@ -6,8 +6,8 @@ type TWalletState = {
   walletBalance?: TGetBalanceResDto;
   sendTransactionToUser?: {
     telegramId: string;
-    username: string;
-    firstName: string;
+    username?: string;
+    firstName?: string;
   };
 };
 
@@ -31,8 +31,8 @@ const walletSlice = createSlice({
       action: PayloadAction<
         | {
             telegramId: string;
-            username: string;
-            firstName: string;
+            username?: string;
+            firstName?: string;
           }
         | undefined
       >
