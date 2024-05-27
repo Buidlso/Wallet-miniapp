@@ -9,6 +9,7 @@ import React from "react";
 import { ReduxProvider } from "@/redux/reduxProvider";
 import { TelegramGuard } from "@/components/providers";
 import { TmaSDKProvider } from "@/components/tma";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
             </TelegramGuard>
           </ReduxProvider>
         </TmaSDKProvider>
+        <Toaster />
       </body>
     </html>
   );

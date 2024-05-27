@@ -29,6 +29,7 @@ import { NetworkEnum } from "@/types/enums";
 import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/Typography";
 import WalletBalanceCard from "@/components/WalletBalanceCard";
+import { formatEnum } from "@/lib/utils";
 import { useSendTransactionMutation } from "@/server/api/wallet";
 import { useTelegram } from "@/components/providers";
 import { useWalletStore } from "@/redux/hooks";
@@ -42,7 +43,7 @@ type WalletBalance = {
   POLYGON_MAINNET: number;
 };
 
-const Wallet = ({ sendTransaction }: { sendTransaction: boolean }) => {
+const Wallet = () => {
   const { user } = useTelegram();
   const { wallet, sendTransactionToUser, walletBalance } = useWalletStore();
   const { telegramUserId } = useTelegramStore();
@@ -76,7 +77,6 @@ const Wallet = ({ sendTransaction }: { sendTransaction: boolean }) => {
     setShowTransaction(true);
   }
 
-  console.log({ wallet });
   if (!telegramUserId) return <Loading />;
 
   return (
@@ -166,7 +166,7 @@ export const SwitchNetwork = ({
       <SelectContent>
         {Object?.keys(NetworkEnum)?.map((network) => (
           <SelectItem key={network} value={network}>
-            {network}
+            {formatEnum(network)}
           </SelectItem>
         ))}
       </SelectContent>
@@ -215,7 +215,6 @@ const SendTransaction = ({
       amount: ethAmount!,
       from: telegramUserId!,
       network: selectedNetwork,
-      // toAddress: sendTransactionToUser?.telegramId!,
       toAddress: walletAddress!,
       asset: selectedToken!,
     });
@@ -258,13 +257,16 @@ const SendTransaction = ({
           </Avatar>
           <p>{sendTransactionToUser?.firstName}</p>
         </div>
-        <Link
-          href={`https://sepolia.etherscan.io/tx/${hash}`}
-          className="break-all text-muted-foreground hover:underline"
-          target="_blank"
-        >
-          {hash}
-        </Link>
+        <div>
+          <Typography variant={"muted"}>TX hash:</Typography>
+          <Link
+            href={`https://sepolia.etherscan.io/tx/${hash}`}
+            className="break-all text-muted-foreground hover:underline"
+            target="_blank"
+          >
+            {hash}
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -69,7 +69,7 @@ export const useSendTransactionByAddressMutation = () => {
   function onSuccess(resp?: TTransferCryptoCurrencyResDto) {
     // queryClient.invalidateQueries(["SEND_TRANSACTION"]);
     toast({
-      title: "Transaction Successfull",
+      title: "Transaction Successfully Sent",
       variant: "default",
     });
   }
